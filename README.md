@@ -20,7 +20,7 @@
 │  Dashboard / Analysis   │  utils/fetcher      (YF, Reddit, ...)  │
 │                         │  utils/scorer       (normalise/RSI)    │
 │  useBackend.js hook     │  data/apex_memory.db                  │
-│  (live + mock fallback) │                                       │
+│  (live data only)       │                                       │
 └────────────────────────┴────────────────────────────────────────┘
 ```
 
@@ -82,21 +82,21 @@ Stage 4: Execution Timing  MOMT + OPTN
 
 ## The 9 Layer Modules
 
-| File | Stage | Data Sources | Fallback |
-|------|-------|-------------|---------|
-| `layers/macro.js`       | 0A | YF: VIX, TNX, IRX, SPY | deterministic mock |
-| `layers/sector.js`      | 0B | YF: sector ETF, SPY, ticker | deterministic mock |
-| `layers/event.js`       | 1A | YF News API (25 headlines) | deterministic mock |
-| `layers/sentiment.js`   | 1B | Reddit WSB + /r/stocks + YF News | deterministic mock |
-| `layers/fundamental.js` | 2A | YF Summary: earnings, EPS, guidance | deterministic mock |
-| `layers/commodity.js`   | 2B | YF: sector-specific commodities | deterministic mock |
-| `layers/historical.js`  | 3  | APEX memory DB (cosine search) | static analogs |
-| `layers/momentum.js`    | 4A | YF Chart: RSI, MACD, MA crossovers | deterministic mock |
-| `layers/options.js`     | 4B | YF Options Chain: PCR, IV, unusual activity | deterministic mock |
+| File | Stage | Data Sources | When unavailable |
+|------|-------|-------------|------------------|
+| `layers/macro.js`       | 0A | YF: VIX, TNX, IRX, SPY | neutral score (0) |
+| `layers/sector.js`      | 0B | YF: sector ETF, SPY, ticker | neutral score (0) |
+| `layers/event.js`       | 1A | YF News API (25 headlines) | neutral score (0) |
+| `layers/sentiment.js`   | 1B | Reddit WSB + /r/stocks + YF News | neutral score (0) |
+| `layers/fundamental.js` | 2A | YF Summary: earnings, EPS, guidance | neutral score (0) |
+| `layers/commodity.js`   | 2B | YF: sector-specific commodities | neutral score (0) |
+| `layers/historical.js`  | 3  | APEX memory DB (cosine search) | neutral (no analogs) |
+| `layers/momentum.js`    | 4A | YF Chart: RSI, MACD, MA crossovers | neutral score (0) |
+| `layers/options.js`     | 4B | YF Options Chain: PCR, IV, unusual activity | neutral score (0) |
 
 Every layer:
-1. Tries live data first
-2. Falls back to deterministic mock if network fails
+1. Uses live data only — no mock or synthetic numbers
+2. Returns score 0 and empty/minimal rawData when fetch fails
 3. Returns `_context` object for downstream layers to consume
 4. Returns `subSignals[]` for the drilldown sidebar
 5. Returns `sparkline[16]` for the node sparkline display
@@ -156,9 +156,9 @@ FRED_API_KEY=    # free at fred.stlouisfed.org/docs/api
                  # used for precise CPI, GDP, yield curve data
 ```
 
-> **All API keys are optional.** The system gracefully falls back to Yahoo Finance
-> for all macro data without FRED. Every layer has a mock fallback, so the UI
-> works even with no internet connection.
+> **API keys (SERP, Gemini, FRED) improve data quality.** Without them, layers use
+> Yahoo Finance and Reddit where possible; when data is unavailable, scores are
+> neutral (0). Backend must be running for the UI to show analysis.
 
 ---
 
@@ -179,17 +179,6 @@ falls back to `SPY` for sector comparison — still fully functional.
 | Yahoo Finance News | 25 latest headlines per ticker |
 | Yahoo Finance Options | Put/call ratio, IV, open interest |
 | Reddit (public JSON) | WSB + /r/stocks posts — no login needed |
-
----
-
-## Mock Fallback System
-
-Every layer uses `deterministicScore(ticker, layerId)` as its fallback:
-- Seeded by ticker + layer ID (same result every time for the same inputs)
-- Returns a realistic -1..+1 float
-- The frontend can run entirely in mock mode — no backend required
-
-**The UI shows `● MOCK` or `● LIVE` indicators** so you always know which data you're seeing.
 
 ---
 
@@ -235,11 +224,11 @@ trading-system/
 │   │   │   └── DrilldownSidebar.jsx  ← progressive disclosure + sim
 │   │   └── Layout/Layout.jsx
 │   ├── hooks/
-│   │   └── useBackend.js             ← live/mock auto-fallback hook
+│   │   └── useBackend.js             ← live backend only, no mock
 │   ├── data/
-│   │   └── mockData.js               ← mock generator
+│   │   └── constants.js              ← layer meta, default symbols
 │   ├── utils/
-│   │   └── convergenceLogic.js       ← local tree builder (mock mode)
+│   │   └── convergenceLogic.js       ← tree builder for pipeline output
 │   └── pages/
 │       ├── Dashboard.jsx
 │       ├── Analysis.jsx
