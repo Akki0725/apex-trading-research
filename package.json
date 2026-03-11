@@ -1,0 +1,33 @@
+{
+  "name": "trading-research-system",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:all": "concurrently -n backend,frontend -c cyan,green \"npm run dev:backend\" \"npm run dev\"",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "setup": "npm install && cd backend && npm install",
+    "setup:db": "cd backend && node -e \"require('./memory/vectorStore')\" && echo 'DB initialised'"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.3",
+    "recharts": "^2.8.0",
+    "lucide-react": "^0.263.1",
+    "reactflow": "^11.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+    "autoprefixer": "^10.4.14",
+    "concurrently": "^8.2.2",
+    "postcss": "^8.4.27",
+    "tailwindcss": "^3.3.3",
+    "vite": "^4.4.5"
+  }
+}
