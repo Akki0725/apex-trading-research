@@ -4,7 +4,7 @@
 //   1. searchSerpApi()   — Google search results via SerpApi
 //   2. fetchJinaReader() — Clean article text extraction via Jina AI Reader
 //   3. fetchArticlesForQuery() — Combine both into enriched article objects
-//   4. askGemini()       — Ground a prompt in hard data using Gemini 1.5 Flash
+//   4. askGemini()       — Ground a prompt in hard data using Gemini 2.5 Flash
 // ─────────────────────────────────────────────────────────────────────────────
 
 const axios = require('axios')
@@ -14,7 +14,7 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY  || ''
 
 const SERP_BASE   = 'https://serpapi.com/search.json'
 const JINA_BASE   = 'https://r.jina.ai/'
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
 
 const FETCH_TIMEOUT = parseInt(process.env.FETCH_TIMEOUT || '10000')
 
@@ -156,7 +156,7 @@ async function fetchArticlesForQuery(query, numArticles = 5, jinaLimit = 3) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Call Gemini 1.5 Flash with a structured prompt.
+ * Call Gemini 2.5 Flash with a structured prompt.
  * The prompt MUST include hard numerical data first, then ask Gemini to
  * synthesize it with the provided context — this prevents hallucination.
  *
